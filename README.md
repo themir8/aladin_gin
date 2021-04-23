@@ -1,2 +1,1 @@
-# aladin_gin
-Rest api on golang gin
+# Rest api in Go(golang)'s Gin framework
