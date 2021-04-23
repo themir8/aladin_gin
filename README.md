@@ -1,1 +1,1 @@
-# Rest api in Go(golang)'s Gin framework
+# Rest api in Go (golang) (Gin)[https://github.com/gin-gonic/gin/] framework
