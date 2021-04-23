@@ -1,2 +1,2 @@
-# aldin_gin
-Rest api on gin
+# aladin_gin
+Rest api on golang gin
