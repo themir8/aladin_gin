@@ -11,23 +11,6 @@ import (
 	"github.com/mirsaid-mirzohidov/aladin_gin/model"
 )
 
-// func errhandler(err error, msg string) {
-// 	if err != nil {
-// 		log.Println(err, msg)
-// 	}
-// }
-
-func DB() *sqlx.DB {
-	DATABASE_URL := "postgres://mirzohidov:coder@localhost:6432/django_examples?sslmode=disable"
-	db, err := sqlx.Connect("postgres", DATABASE_URL)
-	if err != nil {
-		log.Fatalln(err, "Database connection error")
-	}
-	defer db.Close()
-
-	return db
-}
-
 func GetUser(c *gin.Context) {
 	id := c.Param("id")
 
@@ -36,20 +19,30 @@ func GetUser(c *gin.Context) {
 		log.Fatalln(err)
 		return
 	}
+	var user model.User
+
+	response := model.UserInter.GetUser(i)
+
+	c.JSON(http.StatusOK, user)
+}
+
+func SaveUser(c *gin.Context) {
+	var err error
+	DATABASE_URL := "postgres://mirzohidov:coder@localhost:6432/django_examples?sslmode=disable"
+	db, err = sqlx.Connect("postgres", DATABASE_URL)
+
+	if err != nil {
+		log.Fatalln(err, "Database connection error")
+	}
+
+	defer db.Close()
 
 	var user model.User
 
-	db := DB()
-
-	row, err := db.Queryx("SELECT id, user_id, user_name, first_name FROM aladin WHERE id = $1 LIMIT 1", i)
+	err = db.QueryRowx("INSERT INTO aladin(user_id, user_name, first_name) values($1, $2, $3) RETURNING id", user.UserID, user.UserName, user.FirstName).Scan(&user.ID)
 	if err != nil {
-		log.Println(err, "Query error")
-	}
-	if row.Next() {
-		err := row.Scan(&user.ID, &user.UserID, &user.UserName, &user.FirstName)
-		if err != nil {
-			log.Println(err, "Gettting user error")
-		}
+		log.Println(err, "User saving error")
+		return
 	}
 
 	c.JSON(http.StatusOK, user)
