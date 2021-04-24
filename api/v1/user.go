@@ -6,24 +6,30 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-
 	"github.com/mirsaid-mirzohidov/aladin_gin/model"
 )
 
-func GetUser(c *gin.Context, db *sqlx.DB) {
-	id := c.Param("id")
+// func errhandler(err error, msg string) {
+// 	if err != nil {
+// 		log.Println(err, msg)
+// 	}
+// }
 
-	_, err := uuid.Parse(id)
-
+func DB() *sqlx.DB {
+	DATABASE_URL := "postgres://mirzohidov:coder@localhost:6432/django_examples?sslmode=disable"
+	db, err := sqlx.Connect("postgres", DATABASE_URL)
 	if err != nil {
-		log.Fatalln(err)
-		return
+		log.Fatalln(err, "Database connection error")
 	}
+	defer db.Close()
 
-	var user model.User
+	return db
+}
+
+func GetUser(c *gin.Context) {
+	id := c.Param("id")
 
 	i, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
@@ -31,13 +37,20 @@ func GetUser(c *gin.Context, db *sqlx.DB) {
 		return
 	}
 
-	response, err := user.GetUser(db, i)
-	// log.Println(response)
+	var user model.User
 
-	// if err != nil {
-	// 	log.Fatalln(err, "Getting Permission by id")
-	// 	return
-	// }
+	db := DB()
 
-	c.JSON(http.StatusOK, response)
+	row, err := db.Queryx("SELECT id, user_id, user_name, first_name FROM aladin WHERE id = $1 LIMIT 1", i)
+	if err != nil {
+		log.Println(err, "Query error")
+	}
+	if row.Next() {
+		err := row.Scan(&user.ID, &user.UserID, &user.UserName, &user.FirstName)
+		if err != nil {
+			log.Println(err, "Gettting user error")
+		}
+	}
+
+	c.JSON(http.StatusOK, user)
 }
